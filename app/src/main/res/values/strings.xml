@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">BitRate</string>
+
+    <string-array name="currencies">
+        <item>BTC-USD</item>
+        <item>BTC-EUR</item>
+        <item>BTC-GBP</item>
+        <item>ETH-BTC</item>
+    </string-array>
+</resources>
