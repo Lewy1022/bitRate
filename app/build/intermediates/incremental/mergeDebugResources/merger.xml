@@ -2673,7 +2673,6 @@
         <item>BTC-EUR</item>
         <item>BTC-GBP</item>
         <item>ETH-BTC</item>
-        <item>LTC-BTC</item>
     </string-array></file><file path="F:\projektyAndroid\test\app\src\main\res\values\styles.xml" qualifiers=""><style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         
         <item name="colorPrimary">@color/colorPrimary</item>
