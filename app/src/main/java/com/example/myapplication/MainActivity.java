@@ -14,26 +14,35 @@ import android.widget.Toast;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener
 {
-final String GDAX_WS_URL ="wss://ws-feed-public.sandbox.pro.coinbase.com";
+final String GDAX_WS_URL ="wss://ws-feed.pro.coinbase.com";
+
 final String TAG = "GDAX";
     WebSocketClient webSocketClientUSD ;
-    String currency ="BTC-EUR";
+    String currency ="BTC-USD";
     String currencySymbol = "$";
     boolean webSocketRunningFlag = false;
 
 
+
+    String GDAX_HISTORY_URL ="https://api.gdax.com/products/"+currency+"/candles/?granularity=900";
+
+    ArrayList<Candle> candles = new ArrayList<>();
+
+    double lowHighSum, trendTenElements, lastHistory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +63,70 @@ final String TAG = "GDAX";
             }
         });
         initWebSocketUSD();
+        getHistory(GDAX_HISTORY_URL);
+    }
+
+    public void getHistory(String historyUrl){
+        class HistoryRunner implements Runnable{
+
+           String url;
+            HistoryRunner(String url){
+                this.url =url;
+            }
+
+
+            @Override
+            public void run() {
+             JSONArray arr = JsonHelper.getJSONOArrayFromURL(url);
+             Log.d(TAG, arr.toString());
+             JSONArray candelArr = null;
+                for(int i=0; i<arr.length();i++ ){
+                    try {
+                        candelArr = (JSONArray) arr.get(i);
+
+                    if(candelArr!=null) {
+                        Candle candle = new Candle(candelArr.getString(0),
+                                                    candelArr.getDouble(1),
+                                                    candelArr.getDouble(2),
+                                                    candelArr.getDouble(3),
+                                                    candelArr.getDouble(4),
+                                                    candelArr.getDouble(1)
+                                                    );
+                        candles.add(candle);
+                        Log.d(TAG, ""+(candle.open + candle.close)/2);
+                        lowHighSum += (candle.open + candle.close)/2;
+                        if(i<10)
+                            trendTenElements+=(candle.open + candle.close)/2;
+                        if(i==0)
+                            lastHistory = (candle.open + candle.close)/2;
+                    }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                lowHighSum /= arr.length();
+                final String trendText;
+                if((trendTenElements-lastHistory)>0)
+                    trendText = "UP";
+                else
+                    trendText="DOWN";
+
+                Log.d(TAG, "Srednia cena BTC 24h: "+lowHighSum);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ((TextView)findViewById(R.id.averageTextView)).setText("AvgUSD24h: " + Math.round(lowHighSum) + "$");
+                        ((TextView)findViewById(R.id.trendTextView)).setText("Trend: " + trendText);
+
+
+
+                    }
+                });
+            }
+        }
+        new Thread(new HistoryRunner(historyUrl)).start();
+
     }
 
     public void initWebSocketUSD()
@@ -201,9 +274,11 @@ final String TAG = "GDAX";
 
         Toast.makeText(parent.getContext(),text, Toast.LENGTH_SHORT).show();
         if(webSocketRunningFlag) {
+            getHistory(GDAX_HISTORY_URL);
             this.unSubscribe();
             this.subscribeUSD();
             //super.recreate();
+
         }
 
 

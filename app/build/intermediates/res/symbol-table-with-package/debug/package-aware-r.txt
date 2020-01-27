@@ -684,6 +684,7 @@ id alertTitle
 id all
 id always
 id async
+id averageTextView
 id barrier
 id beginning
 id blocking
@@ -798,6 +799,7 @@ id titleDividerNoCustom
 id title_template
 id top
 id topPanel
+id trendTextView
 id uniform
 id up
 id useLogo
